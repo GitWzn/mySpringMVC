@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!-- 开启Spring注解 -->
+	<context:annotation-config />
+	<!-- 指定Spring注解的扫描路径，指定大包 -->
+	<context:component-scan base-package="com.wzn" />
+	<!-- 开启SpringMVC注解的应用 -->
+	<!-- 配置Spring MVC相关操作方式 告诉系统，Spring MVC直接通过注解的方式进行配置使用 -->
+	<mvc:annotation-driven validator="validator" />
+	<bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+		<property name="validationMessageSource" ref="messageSource" />
+	</bean>
+	<!-- 使用SpringMVC来做请求处理 -->
+	<mvc:default-servlet-handler />
+	<!-- 开启安全访问机制 -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<!-- 访问的前缀，其实就是访问的路径 -->
+		<property name="prefix" value="/WEB-INF/pages/" />
+		<!-- 访问的后缀，设置访问的文件是哪一个类型 -->
+		<property name="suffix" value=".jsp" />
+	</bean>
+	<!-- 设置访问静态资源文件 当页面以/img/**方式访问静态文件时会自动返回给页面 否则页面访问不了静态文件 -->
+	<mvc:resources location="/WEB-INF/img/" mapping="/img/**" />
+	<mvc:resources location="/WEB-INF/css/" mapping="/css/**" />
+	<!-- 注入访问资源文件的实现类 -->
+	<!-- 定义资源的引用 -->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<array>
+				<value>myMessage/myProperties</value>
+			</array>
+		</property>
+		<!-- 默认编码 -->
+		<property name="defaultEncoding" value="UTF-8" />
+		<!-- 对资源文件内容缓存时间，单位秒 -->
+		<property name="cacheSeconds" value="120" />
+	</bean>
+	<!-- 注入配置上传文件的依赖 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- 上传文件的最大容量 2M -->
+		<property name="maxUploadSize" value="2097152" />
+		<!-- 上传文件占用最大内存 2M -->
+		<property name="maxInMemorySize" value="1048576" />
+		<!-- 打开文件上传延迟处理 -->
+		<property name="resolveLazily" value="true" />
+	</bean>
+	<!-- 注入异常跳转页面的依赖 -->
+	<bean id="exceptionMapping"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop
+					key="org.springframework.web.multipart.MaxUploadSizeExceededException">
+					abnormalPage
+				</prop>
+				<!-- 可以拦截多个异常 -->
+			</props>
+		</property>
+	</bean>
+	<!-- 绑定自定义拦截器 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<!-- 针对哪个路径下的内容进行拦截处理 -->
+			<mvc:mapping path="/**" />  <!-- 拦截所有 -->
+			<!-- 配置排除拦截的方法 -->
+			<mvc:exclude-mapping path="/user/*" />
+			<!-- 自定义的拦截器 -->
+			<!-- <bean class="com.wzn188.myInterceptor.MyInterceptor1" /> -->
+			<bean class="com.wzn188.myInterceptor.MyInterceptor2" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+</beans>
